@@ -1,0 +1,141 @@
+{
+  "tables": [
+    {
+      "slug": "services",
+      "name": "Services",
+      "icon": "Briefcase",
+      "fields": [
+        { "slug": "name", "name": "Name", "field_type": "text", "required": true },
+        { "slug": "description", "name": "Description", "field_type": "text", "required": false },
+        { "slug": "duration_minutes", "name": "Duration (min)", "field_type": "number", "required": false },
+        { "slug": "price", "name": "Price", "field_type": "currency", "required": false }
+      ]
+    },
+    {
+      "slug": "providers",
+      "name": "Providers",
+      "icon": "User",
+      "fields": [
+        { "slug": "name", "name": "Name", "field_type": "text", "required": true },
+        { "slug": "email", "name": "Email", "field_type": "text", "required": false }
+      ]
+    },
+    {
+      "slug": "time_slots",
+      "name": "Time Slots",
+      "icon": "Clock",
+      "fields": [
+        {
+          "slug": "provider_id",
+          "name": "Provider",
+          "field_type": "relation",
+          "required": false,
+          "relation_table_slug": "providers"
+        },
+        {
+          "slug": "service_id",
+          "name": "Service",
+          "field_type": "relation",
+          "required": false,
+          "relation_table_slug": "services"
+        },
+        { "slug": "start_time", "name": "Start Time", "field_type": "datetime", "required": true },
+        { "slug": "end_time", "name": "End Time", "field_type": "datetime", "required": false },
+        {
+          "slug": "status",
+          "name": "Status",
+          "field_type": "select",
+          "required": false,
+          "validation": { "options": ["available", "booked", "blocked"] }
+        }
+      ]
+    },
+    {
+      "slug": "bookings",
+      "name": "Bookings",
+      "icon": "Calendar",
+      "fields": [
+        {
+          "slug": "time_slot_id",
+          "name": "Time Slot",
+          "field_type": "relation",
+          "required": false,
+          "relation_table_slug": "time_slots"
+        },
+        {
+          "slug": "service_id",
+          "name": "Service",
+          "field_type": "relation",
+          "required": false,
+          "relation_table_slug": "services"
+        },
+        { "slug": "customer_name", "name": "Customer Name", "field_type": "text", "required": true },
+        { "slug": "customer_email", "name": "Customer Email", "field_type": "text", "required": true },
+        { "slug": "customer_phone", "name": "Customer Phone", "field_type": "text", "required": false },
+        {
+          "slug": "status",
+          "name": "Status",
+          "field_type": "select",
+          "required": false,
+          "validation": { "options": ["pending", "confirmed", "completed", "cancelled"] }
+        },
+        { "slug": "created_at", "name": "Created At", "field_type": "datetime", "required": false }
+      ]
+    }
+  ],
+  "reports": [
+    {
+      "name": "Bookings by status",
+      "description": "Count of bookings grouped by status",
+      "config": {
+        "type": "table",
+        "tableSlug": "bookings",
+        "groupBy": ["status"],
+        "aggregates": [{ "field": "id", "fn": "count" }],
+        "sort": "status",
+        "order": "asc",
+        "limit": 50
+      }
+    },
+    {
+      "name": "Bookings by service",
+      "description": "Count of bookings per service",
+      "config": {
+        "type": "table",
+        "tableSlug": "bookings",
+        "groupBy": ["service_id"],
+        "aggregates": [{ "field": "id", "fn": "count" }],
+        "sort": "service_id",
+        "order": "asc",
+        "limit": 50
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "name": "booking.confirmed → email customer",
+      "definition": {
+        "nodes": [
+          {
+            "id": "trigger-1",
+            "type": "trigger",
+            "data": { "trigger_type": "event", "trigger_event_type": "booking.confirmed" },
+            "position": { "x": 0, "y": 0 }
+          },
+          {
+            "id": "email-1",
+            "type": "email",
+            "data": {
+              "to_mode": "from_record",
+              "to_field": "customer_email",
+              "subject": "Booking confirmed",
+              "body": "Your booking has been confirmed. We'll see you soon!"
+            },
+            "position": { "x": 240, "y": 0 }
+          }
+        ],
+        "edges": [{ "id": "e1", "source": "trigger-1", "target": "email-1" }]
+      }
+    }
+  ]
+}
