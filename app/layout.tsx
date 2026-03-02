@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Script from "next/script";
+import { getHolmesScriptUrl } from "@aurora-studio/sdk";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,6 +18,15 @@ export default function RootLayout({
         style={{ "--aurora-accent": process.env.NEXT_PUBLIC_ACCENT_COLOR ?? "#38bdf8" } as React.CSSProperties}
       >
         <main className="min-h-screen">{children}</main>
+        {process.env.NEXT_PUBLIC_AURORA_API_URL && process.env.NEXT_PUBLIC_TENANT_SLUG && (
+          <Script
+            src={getHolmesScriptUrl(
+              process.env.NEXT_PUBLIC_AURORA_API_URL,
+              process.env.NEXT_PUBLIC_TENANT_SLUG
+            )}
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );
