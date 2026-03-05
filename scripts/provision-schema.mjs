@@ -17,7 +17,7 @@ const base = apiUrl.replace(/\/$/, "");
 const res = await fetch(`${base}/v1/provision-schema`, {
   method: "POST",
   headers: { "Content-Type": "application/json", "X-Api-Key": apiKey },
-  body: JSON.stringify({ schema, base: "marketplace-base" }),
+  body: JSON.stringify({ schema, base: "base" }),
 });
 
 if (!res.ok) {

@@ -1,7 +1,7 @@
 /**
  * First-run schema provisioning for Aurora.
  */
-export const AURORA_BASE = "marketplace-base" as const;
+export const AURORA_BASE = "base" as const;
 
 export type SchemaShape = {
   tables: unknown[];

@@ -1,45 +1,51 @@
 import Link from "next/link";
+import { HeroSearch } from "@/components/HeroSearch";
 
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
-  const studioUrl =
-    process.env.NEXT_PUBLIC_AURORA_API_URL && process.env.NEXT_PUBLIC_TENANT_SLUG
-      ? `${process.env.NEXT_PUBLIC_AURORA_API_URL.replace("/api", "")}/${process.env.NEXT_PUBLIC_TENANT_SLUG}/app`
-      : null;
-
   return (
-    <div className="max-w-4xl mx-auto px-4 py-16">
-      <h1 className="text-3xl font-bold mb-2">Booking</h1>
-      <p className="text-aurora-muted mb-8">
-        Services, time slots & appointments. Powered by Aurora Studio.
-      </p>
-      <nav className="flex flex-wrap gap-4">
-        <Link
-          href="/services"
-          className="inline-block px-6 py-3 rounded-component bg-aurora-accent text-aurora-bg font-semibold hover:opacity-90 transition-opacity"
-        >
-          Services
-        </Link>
-        <Link
-          href="/bookings"
-          className="inline-block px-6 py-3 rounded-component border border-aurora-border text-white font-semibold hover:bg-aurora-surface transition-colors"
-        >
-          Bookings
-        </Link>
-        <div data-holmes="recommendations" className="contents">
-          {studioUrl && (
-          <a
-            href={studioUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-6 py-3 rounded-component border border-aurora-accent/50 text-aurora-accent font-semibold hover:bg-aurora-accent/10 transition-colors"
-          >
-            View in Aurora Studio →
-          </a>
-          )}
+    <div className="max-w-7xl mx-auto">
+      {/* Hero - Booking.com style */}
+      <section className="relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden min-h-[420px]">
+        <div className="absolute inset-0 bg-gradient-to-b from-aurora-surface/40 to-transparent" />
+        <div
+          className="absolute inset-0 opacity-35"
+          style={{
+            backgroundImage:
+              "url(https://placehold.co/1920x1080/1e293b/94a3b8?text=Find+and+book+services)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="relative z-10 flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-white drop-shadow-2xl">
+            Find and book the best services
+          </h1>
+          <p className="text-lg sm:text-xl text-white/90 mb-10 drop-shadow max-w-2xl">
+            Consultations, wellness, appointments and more — from trusted providers in your area.
+          </p>
+          <HeroSearch />
         </div>
-      </nav>
+      </section>
+
+      {/* Quick links */}
+      <section className="py-16 px-4 sm:px-6">
+        <div className="flex flex-wrap justify-center gap-6">
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-component bg-aurora-surface border border-aurora-border hover:bg-aurora-surface-hover hover:border-aurora-accent/30 transition-all font-semibold"
+          >
+            Browse all services
+          </Link>
+          <Link
+            href="/bookings"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-component border-2 border-aurora-accent/50 text-aurora-accent font-semibold hover:bg-aurora-accent/10 transition-all"
+          >
+            View my bookings
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
