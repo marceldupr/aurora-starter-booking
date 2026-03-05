@@ -10,10 +10,10 @@ export default function HomePage() {
       <section className="relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden min-h-[420px]">
         <div className="absolute inset-0 bg-gradient-to-b from-aurora-surface/40 to-transparent" />
         <div
-          className="absolute inset-0 opacity-35"
+          className="absolute inset-0 opacity-40"
           style={{
             backgroundImage:
-              "url(https://placehold.co/1920x1080/1e293b/94a3b8?text=Find+and+book+services)",
+              "url(https://picsum.photos/seed/aurora-booking-hero/1920/1080)",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

@@ -13,7 +13,7 @@ function formatPrice(cents: number): string {
   }).format((cents ?? 0) / 100);
 }
 
-async function getServiceAndSlots(id: string) {
+async function getServiceAndSlots(id: string, dateFilter?: string | null) {
   const client = createAuroraClient();
   const [serviceRes, slotsRes] = await Promise.all([
     client.tables("services").records.get(id),
@@ -26,14 +26,28 @@ async function getServiceAndSlots(id: string) {
 
   const service = serviceRes as Record<string, unknown> | null;
   const allSlots = (slotsRes as { data?: Record<string, unknown>[] })?.data ?? [];
-
-  // Filter by service_id, available status, and future dates
   const now = new Date();
+
+  // Parse optional date filter (YYYY-MM-DD)
+  const filterDate = dateFilter
+    ? (() => {
+        const d = new Date(dateFilter + "T00:00:00");
+        return isNaN(d.getTime()) ? null : d;
+      })()
+    : null;
+
   const availableSlots = allSlots.filter((s) => {
     if (String(s.service_id ?? "") !== id) return false;
     const status = String(s.status ?? "");
     const start = s.start_time ? new Date(String(s.start_time)) : null;
-    return (status === "available" || !status) && start && start > now;
+    if (!(status === "available" || !status) || !start || start <= now) return false;
+    if (filterDate) {
+      const slotDate = new Date(start);
+      if (slotDate.getFullYear() !== filterDate.getFullYear() ||
+          slotDate.getMonth() !== filterDate.getMonth() ||
+          slotDate.getDate() !== filterDate.getDate()) return false;
+    }
+    return true;
   });
 
   return { service, slots: availableSlots };
@@ -41,15 +55,18 @@ async function getServiceAndSlots(id: string) {
 
 export default async function ServiceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ date?: string }>;
 }) {
   const { id } = await params;
+  const { date } = await searchParams;
 
   let service: Record<string, unknown> | null = null;
   let slots: Record<string, unknown>[] = [];
   try {
-    const result = await getServiceAndSlots(id);
+    const result = await getServiceAndSlots(id, date);
     service = result.service;
     slots = result.slots ?? [];
   } catch {

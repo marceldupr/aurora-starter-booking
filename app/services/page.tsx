@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createAuroraClient } from "@/lib/aurora";
 import { Clock, MapPin } from "lucide-react";
+import { ServicesFilters } from "./ServicesFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -11,22 +12,43 @@ function formatPrice(cents: number): string {
   }).format((cents ?? 0) / 100);
 }
 
-async function getServices() {
+async function getServices(opts: {
+  filter?: string;
+  sort?: string;
+  order?: "asc" | "desc";
+  category?: string;
+}) {
   const client = createAuroraClient();
-  const { data } = await client.tables("services").records.list({
+  const listOpts = {
     limit: 50,
-    sort: "name",
-    order: "asc",
-  });
+    sort: opts.sort ?? "name",
+    order: (opts.order ?? "asc") as "asc" | "desc",
+    filter: opts.filter?.trim() || undefined,
+    ...(opts.category?.trim() && { category: opts.category.trim() }),
+  };
+  const { data } = await client.tables("services").records.list(listOpts);
   return data ?? [];
 }
 
-export default async function ServicesPage() {
+export default async function ServicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; sort?: string; order?: string; date?: string; category?: string }>;
+}) {
+  const { q, sort, order, date, category } = await searchParams;
+  const sortField = sort || "name";
+  const sortOrder = order === "desc" ? "desc" : "asc";
+
   let services: Record<string, unknown>[] = [];
   let error: string | null = null;
 
   try {
-    services = await getServices();
+    services = await getServices({
+      filter: q?.trim() || undefined,
+      sort: sortField,
+      order: sortOrder,
+      category: category?.trim() || undefined,
+    });
   } catch (e) {
     error = e instanceof Error ? e.message : "Unable to load services";
   }
@@ -35,9 +57,10 @@ export default async function ServicesPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
       <div className="mb-10">
         <h1 className="text-3xl font-bold mb-2">Browse services</h1>
-        <p className="text-aurora-muted">
+        <p className="text-aurora-muted mb-6">
           Find and book appointments with trusted providers.
         </p>
+        <ServicesFilters query={q} sort={sortField} order={sortOrder} category={category} />
       </div>
 
       {error ? (
@@ -50,9 +73,13 @@ export default async function ServicesPage() {
         </div>
       ) : services.length === 0 ? (
         <div className="rounded-container bg-aurora-surface border border-aurora-border p-12 text-center">
-          <p className="text-aurora-muted mb-2">No services yet</p>
+          <p className="text-aurora-muted mb-2">
+            {q ? "No services match your search" : "No services yet"}
+          </p>
           <p className="text-sm text-aurora-muted max-w-md mx-auto">
-            Add services in Aurora Studio, or run the seed script to populate demo data.
+            {q
+              ? "Try a different search term."
+              : "Add services in Aurora Studio, or run the seed script to populate demo data."}
           </p>
         </div>
       ) : (
@@ -64,10 +91,13 @@ export default async function ServicesPage() {
             const price = s.price != null ? Number(s.price) : null;
             const duration = s.duration_minutes != null ? Number(s.duration_minutes) : null;
             const imageUrl = s.image_url ? String(s.image_url) : null;
+            const serviceHref = date
+              ? `/services/${id}?date=${encodeURIComponent(date)}`
+              : `/services/${id}`;
             return (
               <Link
                 key={id}
-                href={`/services/${id}`}
+                href={serviceHref}
                 className="group rounded-container overflow-hidden bg-aurora-surface border border-aurora-border hover:border-aurora-accent/40 hover:shadow-xl transition-all"
               >
                 <div className="aspect-[16/10] bg-aurora-surface-hover overflow-hidden">
@@ -84,6 +114,11 @@ export default async function ServicesPage() {
                   )}
                 </div>
                 <div className="p-5">
+                  {s.category ? (
+                    <span className="text-xs font-medium text-aurora-accent uppercase tracking-wide mb-1 block">
+                      {String(s.category)}
+                    </span>
+                  ) : null}
                   <h2 className="font-semibold text-lg mb-2 group-hover:text-aurora-accent transition-colors">
                     {name}
                   </h2>

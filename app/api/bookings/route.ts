@@ -20,14 +20,31 @@ export async function POST(req: Request) {
       );
     }
     const client = createAuroraClient();
-    const record = await client.tables("bookings").records.create({
+
+    // Check slot is still available (avoid race conditions)
+    const slot = (await client.tables("time_slots").records.get(time_slot_id)) as Record<
+      string,
+      unknown
+    >;
+    if (String(slot?.status ?? "") === "booked") {
+      return NextResponse.json(
+        { error: "This time slot was just booked. Please select another." },
+        { status: 409 }
+      );
+    }
+
+    const record = (await client.tables("bookings").records.create({
       time_slot_id,
       service_id,
       customer_name,
       customer_email,
       customer_phone: customer_phone ?? null,
       status: status ?? "confirmed",
-    });
+    })) as Record<string, unknown>;
+
+    // Mark time slot as booked to prevent double-booking
+    await client.tables("time_slots").records.update(time_slot_id, { status: "booked" });
+
     return NextResponse.json(record);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Booking failed";
